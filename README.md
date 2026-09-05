@@ -11,7 +11,7 @@ demo1/
     train_3k.txt
     dev_1k.txt
     test_1k.txt
-  bert-base-chinese/     # Local BERT tokenizer/config/model files
+  bert-base-chinese/     # Local BERT model files, download before training
   config.py              # Paths and training parameters
   dataset.py             # Dataset loading
   evaluate.py            # Evaluation helpers
@@ -48,7 +48,37 @@ The training script expects these paths:
 - Checkpoints: `demo1/checkpoints/`
 - Outputs: `demo1/outputs/`
 
-The checkpoint directory is ignored by Git because generated model checkpoints can be large.
+The checkpoint directory and pretrained model directory are ignored by Git because these files can be large.
+
+## Download Pretrained Model
+
+The pretrained `bert-base-chinese` files are not stored in this repository. Download them before training and place them in:
+
+```text
+demo1/bert-base-chinese/
+```
+
+Option 1: download with Git LFS from Hugging Face:
+
+```powershell
+cd demo1
+git lfs install
+git clone https://huggingface.co/google-bert/bert-base-chinese bert-base-chinese
+```
+
+Option 2: download with Python:
+
+```powershell
+cd demo1
+python -c "from transformers import AutoTokenizer, AutoModel; AutoTokenizer.from_pretrained('google-bert/bert-base-chinese').save_pretrained('bert-base-chinese'); AutoModel.from_pretrained('google-bert/bert-base-chinese').save_pretrained('bert-base-chinese')"
+```
+
+After downloading, make sure this directory contains files such as:
+
+- `config.json`
+- `vocab.txt`
+- `tokenizer.json`
+- `model.safetensors` or `pytorch_model.bin`
 
 ## SwanLab
 

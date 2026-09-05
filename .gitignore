@@ -1,4 +1,5 @@
 demo1/checkpoints/
+demo1/bert-base-chinese/
 *.pt
 *.pth
 *.ckpt

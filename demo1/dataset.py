@@ -1,4 +1,5 @@
 import torch
+from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 
 
@@ -60,7 +61,7 @@ class ToutiaoDataset(Dataset):
         encoding = self.tokenizer(
             text,
             max_length=self.max_length,
-            padding="max_length",
+            padding=False,
             truncation=True,
             return_tensors="pt"
         )
@@ -70,6 +71,38 @@ class ToutiaoDataset(Dataset):
             "attention_mask": encoding["attention_mask"].squeeze(0),
             "labels": torch.tensor(label, dtype=torch.long)
         }
+
+
+def collate_fn(batch):
+    input_ids = [
+        item["input_ids"]
+        for item in batch
+    ]
+    attention_masks = [
+        item["attention_mask"]
+        for item in batch
+    ]
+    labels = torch.stack([
+        item["labels"]
+        for item in batch
+    ])
+
+    input_ids = pad_sequence(
+        input_ids,
+        batch_first=True,
+        padding_value=0,
+    )
+    attention_masks = pad_sequence(
+        attention_masks,
+        batch_first=True,
+        padding_value=0,
+    )
+
+    return {
+        "input_ids": input_ids,
+        "attention_mask": attention_masks,
+        "labels": labels,
+    }
 
 
 def get_all_labels(file_paths):

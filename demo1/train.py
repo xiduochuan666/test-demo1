@@ -24,7 +24,7 @@ from config import (
     TEST_PATH,
     TRAIN_PATH,
 )
-from dataset import ToutiaoDataset, get_all_labels
+from dataset import ToutiaoDataset, collate_fn, get_all_labels
 from evaluate import evaluate
 from model import BertTextClassifier
 
@@ -79,6 +79,7 @@ def build_dataloader(dataset, shuffle):
         dataset,
         batch_size=BATCH_SIZE,
         shuffle=shuffle,
+        collate_fn=collate_fn,
     )
 
 

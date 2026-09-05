@@ -12,11 +12,13 @@ demo1/
     dev_1k.txt
     test_1k.txt
   bert-base-chinese/     # Local BERT model files, download before training
-  config.py              # Paths and training parameters
+  config.py              # Config class and JSON loader
   dataset.py             # Dataset loading
-  evaluate.py            # Evaluation helpers
   model.py               # BERT classifier
-  train.py               # Training entry point
+  main.py                # Training entry point
+  train.py               # Trainer class
+  configs/
+    train_config.json    # Training paths and hyperparameters
   requirements.txt       # Python dependencies
 ```
 
@@ -96,8 +98,36 @@ Run training from the `demo1` directory:
 
 ```powershell
 cd demo1
-python train.py
+python main.py
 ```
+
+The default training settings are stored in `configs/train_config.json`. You can edit that file for normal experiments.
+
+You can also override the JSON settings with command-line arguments:
+
+```powershell
+python main.py --batch-size 32 --learning-rate 3e-5 --num-epochs 3 --max-length 128
+```
+
+Common arguments:
+
+- `--config`
+- `--train-path`
+- `--dev-path`
+- `--test-path`
+- `--model-dir`
+- `--checkpoint-dir`
+- `--output-dir`
+- `--label-map-path`
+- `--max-length`
+- `--batch-size`
+- `--learning-rate`
+- `--num-epochs`
+- `--dropout`
+- `--warmup-ratio`
+- `--seed`
+- `--device`
+- `--swanlab-mode`
 
 The script will:
 
@@ -109,12 +139,15 @@ The script will:
 
 ## Main Configuration
 
-Edit `demo1/config.py` to change common settings:
+Edit `demo1/configs/train_config.json` to change common settings:
 
-- `MAX_LENGTH`
-- `BATCH_SIZE`
-- `LEARNING_RATE`
-- `NUM_EPOCHS`
-- `DROPOUT`
+- `max_length`
+- `batch_size`
+- `learning_rate`
+- `num_epochs`
+- `dropout`
+- `warmup_ratio`
+- `device`
+- `swanlab_mode`
 
-The script automatically uses CUDA when available, otherwise it falls back to CPU.
+`demo1/config.py` defines the `TrainConfig` class and loads the JSON file. The script uses CUDA automatically when `"device": "auto"` and CUDA is available, otherwise it falls back to CPU.

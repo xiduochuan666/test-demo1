@@ -1,0 +1,21 @@
+{
+  "train_path": "0.demo1文本分类/train_3k.txt",
+  "dev_path": "0.demo1文本分类/dev_1k.txt",
+  "test_path": "0.demo1文本分类/test_1k.txt",
+  "model_dir": "bert-base-chinese",
+  "checkpoint_dir": "checkpoints",
+  "output_dir": "outputs",
+  "label_map_path": "outputs/label_map.json",
+  "max_length": 128,
+  "dropout": 0.1,
+  "batch_size": 16,
+  "learning_rate": 0.00002,
+  "num_epochs": 5,
+  "warmup_ratio": 0.1,
+  "device": "auto",
+  "seed": 42,
+  "swanlab_project": "toutiao_text_classification",
+  "swanlab_workspace": "xiduochuanhaimeng",
+  "experiment_name": "bert-base-chinese_lr2e-5_bs16_len128",
+  "swanlab_mode": "online"
+}

@@ -1,6 +1,5 @@
 import os
 import random
-import argparse
 
 import numpy as np
 import swanlab
@@ -30,16 +29,6 @@ from evaluate import evaluate
 from model import BertTextClassifier
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--learning_rate", type=float, default=LEARNING_RATE)
-    parser.add_argument("--batch_size", type=int, default=BATCH_SIZE)
-    parser.add_argument("--dropout", type=float, default=DROPOUT)
-    parser.add_argument("--epochs", type=int, default=NUM_EPOCHS)
-    parser.add_argument("--max_length", type=int, default=MAX_LENGTH)
-    return parser.parse_args()
-
-
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -47,7 +36,7 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def init_swanlab(args):
+def init_swanlab():
     api_key = os.getenv("SWANLAB_API_KEY")
 
     if api_key:
@@ -60,8 +49,8 @@ def init_swanlab(args):
         project="toutiao_text_classification",
         workspace="xiduochuanhaimeng",
         experiment_name=(
-            f"bert-base-chinese_lr{args.learning_rate}_"
-            f"bs{args.batch_size}_dropout{args.dropout}"
+            f"bert-base-chinese_lr{LEARNING_RATE}_"
+            f"bs{BATCH_SIZE}_dropout{DROPOUT}"
         ),
         description="BERT Toutiao text classification training and evaluation",
         tags=[
@@ -74,26 +63,26 @@ def init_swanlab(args):
             "model": "bert-base-chinese",
             "architecture": "BertTextClassifier",
             "dataset": "toutiao-text-classification",
-            "max_length": args.max_length,
-            "batch_size": args.batch_size,
-            "learning_rate": args.learning_rate,
-            "epochs": args.epochs,
-            "dropout": args.dropout,
+            "max_length": MAX_LENGTH,
+            "batch_size": BATCH_SIZE,
+            "learning_rate": LEARNING_RATE,
+            "epochs": NUM_EPOCHS,
+            "dropout": DROPOUT,
             "device": str(DEVICE),
             "seed": SEED,
         },
     )
 
 
-def build_dataloader(dataset, batch_size, shuffle):
+def build_dataloader(dataset, shuffle):
     return DataLoader(
         dataset,
-        batch_size=batch_size,
+        batch_size=BATCH_SIZE,
         shuffle=shuffle,
     )
 
 
-def train_one_epoch(model, dataloader, criterion, optimizer, epoch):
+def train_one_epoch(model, dataloader, criterion, optimizer):
     model.train()
 
     total_loss = 0.0
@@ -105,7 +94,7 @@ def train_one_epoch(model, dataloader, criterion, optimizer, epoch):
         desc="Training",
     )
 
-    for batch_idx, batch in enumerate(progress_bar):
+    for batch in progress_bar:
         input_ids = batch["input_ids"].to(DEVICE)
         attention_mask = batch["attention_mask"].to(DEVICE)
         labels = batch["labels"].to(DEVICE)
@@ -131,21 +120,10 @@ def train_one_epoch(model, dataloader, criterion, optimizer, epoch):
             loss=f"{loss.item():.4f}",
         )
 
-        global_step = epoch * len(dataloader) + batch_idx + 1
-        swanlab.log(
-            {
-                "batch/loss": loss.item(),
-                "batch/epoch": epoch + 1,
-                "batch/index": batch_idx + 1,
-            },
-            step=global_step,
-        )
-
     return total_loss / len(dataloader), correct / total
 
 
 def main():
-    args = parse_args()
     set_seed(SEED)
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
@@ -155,7 +133,7 @@ def main():
     print("SwanLab mode: online")
     print("=" * 50)
 
-    swanlab_run = init_swanlab(args)
+    swanlab_run = init_swanlab()
 
     try:
         label2id, id2label = get_all_labels([TRAIN_PATH])
@@ -173,19 +151,19 @@ def main():
             TRAIN_PATH,
             tokenizer,
             label2id,
-            args.max_length,
+            MAX_LENGTH,
         )
         dev_dataset = ToutiaoDataset(
             DEV_PATH,
             tokenizer,
             label2id,
-            args.max_length,
+            MAX_LENGTH,
         )
         test_dataset = ToutiaoDataset(
             TEST_PATH,
             tokenizer,
             label2id,
-            args.max_length,
+            MAX_LENGTH,
         )
 
         if len(train_dataset) == 0:
@@ -205,34 +183,33 @@ def main():
             step=0,
         )
 
-        train_loader = build_dataloader(train_dataset, args.batch_size, shuffle=True)
-        dev_loader = build_dataloader(dev_dataset, args.batch_size, shuffle=False)
-        test_loader = build_dataloader(test_dataset, args.batch_size, shuffle=False)
+        train_loader = build_dataloader(train_dataset, shuffle=True)
+        dev_loader = build_dataloader(dev_dataset, shuffle=False)
+        test_loader = build_dataloader(test_dataset, shuffle=False)
 
         model = BertTextClassifier(
             model_path=MODEL_DIR,
             num_labels=num_labels,
-            dropout=args.dropout,
+            dropout=DROPOUT,
         ).to(DEVICE)
 
         criterion = CrossEntropyLoss()
         optimizer = AdamW(
             model.parameters(),
-            lr=args.learning_rate,
+            lr=LEARNING_RATE,
         )
 
         best_dev_acc = 0.0
         checkpoint_path = os.path.join(CHECKPOINT_DIR, "best_model.pt")
 
-        for epoch in range(args.epochs):
-            print(f"\nEpoch {epoch + 1}/{args.epochs}")
+        for epoch in range(NUM_EPOCHS):
+            print(f"\nEpoch {epoch + 1}/{NUM_EPOCHS}")
 
             train_loss, train_acc = train_one_epoch(
                 model,
                 train_loader,
                 criterion,
                 optimizer,
-                epoch,
             )
             dev_loss, dev_acc, _, _ = evaluate(
                 model,
@@ -249,14 +226,10 @@ def main():
             swanlab.log(
                 {
                     "epoch": epoch + 1,
-                    "epoch/train_loss": train_loss,
-                    "epoch/train_accuracy": train_acc,
-                    "epoch/dev_accuracy": dev_acc,
                     "train/loss": train_loss,
                     "train/accuracy": train_acc,
+                    "dev/loss": dev_loss,
                     "dev/accuracy": dev_acc,
-                    "loss": train_loss,
-                    "acc": dev_acc,
                 },
                 step=epoch + 1,
             )
@@ -319,9 +292,10 @@ def main():
         swanlab.log(
             {
                 "best_dev_accuracy": best_dev_acc,
+                "test/loss": test_loss,
                 "test/accuracy": test_acc,
             },
-            step=args.epochs + 1,
+            step=NUM_EPOCHS + 1,
         )
 
     finally:

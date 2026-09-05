@@ -1,5 +1,5 @@
-torch
 transformers
+swanlab
+scikit-learn
 tqdm
 numpy
-swanlab

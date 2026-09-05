@@ -1,5 +1,6 @@
-transformers
-swanlab
-scikit-learn
-tqdm
-numpy
+torch==2.2.2
+transformers==4.40.2
+swanlab==0.3.24
+scikit-learn==1.4.2
+tqdm==4.66.4
+numpy==1.26.4

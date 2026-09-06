@@ -1,6 +1,6 @@
-demo1/checkpoints/
-demo1/outputs/
-demo1/bert-base-chinese/
+checkpoints/
+outputs/
+bert-base-chinese/
 .vscode/
 *.pt
 *.pth

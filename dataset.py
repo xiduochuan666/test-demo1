@@ -14,42 +14,60 @@ class ToutiaoDataset(Dataset):
     """
 
     def __init__(self, file_path, tokenizer, label2id, max_length=128):
-        # 数据量较小，初始化时直接把文本和标签读入内存，后续取样更简单。
-        self.texts = []
-        self.labels = []
-
-        # tokenizer 在 collate_fn 中按 batch 调用，用来实现动态 padding。
+        # __init__ 只保存必要参数，并调用 load_data 完成数据读取。
+        # 具体的读取、过滤、解析逻辑放在成员函数里，避免初始化函数太臃肿。
+        self.file_path = file_path
         self.tokenizer = tokenizer
+        self.label2id = label2id
         self.max_length = max_length
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        self.texts, self.labels = self.load_data()
+        print(f"Loaded {len(self.texts)} samples from {self.file_path}")
+
+    def load_data(self):
+        """读取数据文件，并返回文本列表和标签列表。"""
+        texts = []
+        labels = []
+
+        with open(self.file_path, "r", encoding="utf-8") as f:
             for line in f:
-                line = line.strip()
+                sample = self.parse_line(line)
 
-                if not line:
+                if sample is None:
                     continue
 
-                parts = line.split("_!_")
+                text, label = sample
+                texts.append(text)
+                labels.append(label)
 
-                # 至少需要：新闻 ID、类别 ID、类别名称、新闻标题。
-                if len(parts) < 4:
-                    continue
+        return texts, labels
 
-                category_name = parts[2].strip()
-                text = parts[3].strip()
+    def parse_line(self, line):
+        """解析一行原始文本，返回 (text, label)。
 
-                # 标题为空的样本没有训练价值，直接跳过。
-                if not text:
-                    continue
+        如果这一行格式不对、标题为空、类别不在 label2id 中，就返回 None。
+        """
+        line = line.strip()
 
-                # 验证集/测试集如果出现训练集中没有的类别，无法映射成 id。
-                if category_name not in label2id:
-                    continue
+        if not line:
+            return None
 
-                self.texts.append(text)
-                self.labels.append(label2id[category_name])
+        parts = line.split("_!_")
 
-        print(f"Loaded {len(self.texts)} samples from {file_path}")
+        # 至少需要：新闻 ID、类别 ID、类别名称、新闻标题。
+        if len(parts) < 4:
+            return None
+
+        category_name = parts[2].strip()
+        text = parts[3].strip()
+
+        if not text:
+            return None
+
+        if category_name not in self.label2id:
+            return None
+
+        return text, self.label2id[category_name]
 
     def __len__(self):
         """返回数据集样本数量，DataLoader 会依赖这个方法计算 batch 数。"""

@@ -6,33 +6,33 @@ The training pipeline uses PyTorch, Hugging Face Transformers, scikit-learn metr
 ## Project Structure
 
 ```text
-demo1/
-  0.demo1文本分类/        # Dataset files
-    train_3k.txt
-    dev_1k.txt
-    test_1k.txt
-  configs/
-    train_config.json     # Default training paths and hyperparameters
-  config.py               # TrainConfig class and JSON loader
-  dataset.py              # Dataset, label map, and batch dynamic padding
-  main.py                 # Training entry point
-  model.py                # BERT classifier model
-  train.py                # Trainer class
-  requirements.txt        # Python dependencies
+.
+├── 0.demo1文本分类/       # Dataset files
+│   ├── train_3k.txt
+│   ├── dev_1k.txt
+│   └── test_1k.txt
+├── configs/
+│   └── train_config.json # Default training paths and hyperparameters
+├── config.py             # TrainConfig class and JSON loader
+├── dataset.py            # Dataset, label map, and batch dynamic padding
+├── main.py               # Training entry point
+├── model.py              # BERT classifier model
+├── train.py              # Trainer class
+├── requirements.txt      # Python dependencies
+└── README.md
 ```
 
 Generated files are not uploaded to GitHub:
 
-- `demo1/bert-base-chinese/`
-- `demo1/checkpoints/`
-- `demo1/outputs/`
+- `bert-base-chinese/`
+- `checkpoints/`
+- `outputs/`
 - `__pycache__/`
 - `.vscode/`
 
 ## Install Dependencies
 
 ```powershell
-cd demo1
 pip install -r requirements.txt
 ```
 
@@ -43,13 +43,12 @@ If your environment already has CUDA-specific PyTorch packages, make sure the `t
 The pretrained `bert-base-chinese` model is not stored in this repository. Download it before training and place it here:
 
 ```text
-demo1/bert-base-chinese/
+bert-base-chinese/
 ```
 
 Download with Git LFS:
 
 ```powershell
-cd demo1
 git lfs install
 git clone https://huggingface.co/google-bert/bert-base-chinese bert-base-chinese
 ```
@@ -57,7 +56,6 @@ git clone https://huggingface.co/google-bert/bert-base-chinese bert-base-chinese
 Or download with Python:
 
 ```powershell
-cd demo1
 python -c "from transformers import AutoTokenizer, AutoModel; AutoTokenizer.from_pretrained('google-bert/bert-base-chinese').save_pretrained('bert-base-chinese'); AutoModel.from_pretrained('google-bert/bert-base-chinese').save_pretrained('bert-base-chinese')"
 ```
 
@@ -73,7 +71,7 @@ The directory should contain files such as:
 Default training settings are in:
 
 ```text
-demo1/configs/train_config.json
+configs/train_config.json
 ```
 
 Usually, edit this JSON file for experiments instead of changing Python code.
@@ -98,10 +96,9 @@ When `"device": "auto"`, the script uses CUDA if available, otherwise CPU.
 
 ## Run Training
 
-Run from the `demo1` directory:
+Run from the repository root:
 
 ```powershell
-cd demo1
 python main.py
 ```
 
@@ -128,8 +125,8 @@ python main.py --swanlab-mode disabled
 During training, the project generates:
 
 ```text
-demo1/checkpoints/best_model.pt
-demo1/outputs/label_map.json
+checkpoints/best_model.pt
+outputs/label_map.json
 ```
 
 `best_model.pt` stores the best model checkpoint based on validation accuracy.
